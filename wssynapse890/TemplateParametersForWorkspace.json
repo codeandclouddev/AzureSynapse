@@ -1,0 +1,45 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "wssynapse890"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"value": ""
+		},
+		"LS_ADLS_accountKey": {
+			"value": ""
+		},
+		"LS_BlobStorage_connectionString": {
+			"value": ""
+		},
+		"LS_OnPrem_SharedPath_password": {
+			"value": ""
+		},
+		"wssynapse890-WorkspaceDefaultSqlServer_connectionString": {
+			"value": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:wssynapse890.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"value": "https://adlsaccountgen2.dfs.core.windows.net/"
+		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"value": "https://adlsaccountgen2.dfs.core.windows.net/"
+		},
+		"LS_AzureSynapse_properties_typeProperties_server": {
+			"value": "wssynapse890.sql.azuresynapse.net"
+		},
+		"LS_AzureSynapse_properties_typeProperties_database": {
+			"value": "DedicatedSQLPool"
+		},
+		"LS_OnPrem_SharedPath_properties_typeProperties_host": {
+			"value": "\\\\DESKTOP-4C6KG4E\\advanced_supply_chain_sample_data"
+		},
+		"LS_OnPrem_SharedPath_properties_typeProperties_userId": {
+			"value": "Rohit"
+		},
+		"wssynapse890-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://adlsaccountgen2.dfs.core.windows.net"
+		}
+	}
+}

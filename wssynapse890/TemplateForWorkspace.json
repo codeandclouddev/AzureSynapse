@@ -1,0 +1,2348 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "wssynapse890"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"LS_ADLS_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'LS_ADLS'"
+		},
+		"LS_BlobStorage_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'LS_BlobStorage'"
+		},
+		"LS_OnPrem_SharedPath_password": {
+			"type": "secureString",
+			"metadata": "Secure string for 'password' of 'LS_OnPrem_SharedPath'"
+		},
+		"wssynapse890-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'wssynapse890-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:wssynapse890.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsaccountgen2.dfs.core.windows.net/"
+		},
+		"LS_ADLS_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsaccountgen2.dfs.core.windows.net/"
+		},
+		"LS_AzureSynapse_properties_typeProperties_server": {
+			"type": "string",
+			"defaultValue": "wssynapse890.sql.azuresynapse.net"
+		},
+		"LS_AzureSynapse_properties_typeProperties_database": {
+			"type": "string",
+			"defaultValue": "DedicatedSQLPool"
+		},
+		"LS_OnPrem_SharedPath_properties_typeProperties_host": {
+			"type": "string",
+			"defaultValue": "\\\\DESKTOP-4C6KG4E\\advanced_supply_chain_sample_data"
+		},
+		"LS_OnPrem_SharedPath_properties_typeProperties_userId": {
+			"type": "string",
+			"defaultValue": "Rohit"
+		},
+		"wssynapse890-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://adlsaccountgen2.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_CopyFilestoADLS')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy files to ADLS",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobStorageReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings",
+									"copyBehavior": "MergeFiles"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "OrderID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "OrderID",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "CustomerID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "CustomerID",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "OrderDate",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "OrderDate",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Channel",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Channel",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "ProductID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "ProductID",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Quantity",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Quantity",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "UnitPrice",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "UnitPrice",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Status",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Status",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "Region",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "Region",
+											"type": "String",
+											"physicalType": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "WarehouseID",
+											"type": "String",
+											"physicalType": "String"
+										},
+										"sink": {
+											"name": "WarehouseID",
+											"type": "String",
+											"physicalType": "String"
+										}
+									}
+								],
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DS_raw_blob_csv_Orders",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DS_ADLS_bronze_csv_Orders",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-02T23:09:03Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/DS_raw_blob_csv_Orders')]",
+				"[concat(variables('workspaceId'), '/datasets/DS_ADLS_bronze_csv_Orders')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_Transaform_Orders_data')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform Orders Data",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_Orders_etl",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"OrdersRawdata": {},
+									"TargetTable": {},
+									"OrdersCleanedUpdates": {},
+									"OrdersCleanedInserts": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "LS_BlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "staging"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-04T20:14:17Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/df_Orders_etl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_Transform_Inventory_Snapshot')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform Inventory Snapshot",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_inventory_etl",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzeInventoryXML": {},
+									"InventorySnapshot": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "LS_BlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "staging"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-09T00:16:39Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/df_inventory_etl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_Transform_Returns_Categorized')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform Returns Data",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_returns_etl",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzeReturnsdata": {},
+									"ReturnsCategorized": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "LS_BlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "staging"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-08T23:36:43Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/df_returns_etl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_Transform_Shipping_Enriched')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform Shipping Enriched Data",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_shipping_etl",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzeShippingdata": {},
+									"SilverOrdersCleaned": {},
+									"SilverShippingEnriched": {},
+									"ShippingEnrichedInserts": {},
+									"ShippingEnrichedUpdates": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "LS_BlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "staging"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "None",
+							"sourceStagingConcurrency": 1,
+							"cacheSinks": {
+								"firstRowOnly": true
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-07T23:50:03Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/df_shipping_etl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_Transform_Supplier_data')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform Suppliers Data",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_Suppliers_etl",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzeSuppliersData": {},
+									"TargetTable": {},
+									"SuppliersMasterUpdates": {},
+									"sink1": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "LS_BlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "staging"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-12T23:20:32Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/df_Suppliers_etl')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_Transform_product_pricing_scd')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform product pricing scd2",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_product_pricing_scd2",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzeProductMaster": {},
+									"TargetTableproductpricehistoryscd2": {},
+									"Productpricehistoryscd2Insert": {},
+									"Type2Insertsproductpricehistoryscd2": {},
+									"Type2Updatesproductpricehistoryscd2": {},
+									"Type1Updatesproductpricehistoryscd2": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "LS_BlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "staging"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2025-08-15T00:28:14Z"
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/dataflows/df_product_pricing_scd2')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/DS_ADLS_bronze_csv_Orders')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_ADLS",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "csv_Orders",
+						"fileSystem": "bronze"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/DS_raw_blob_csv_Orders')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "LS_BlobStorage",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": "orders.csv",
+						"container": "rawfiles"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "OrderID",
+						"type": "String"
+					},
+					{
+						"name": "CustomerID",
+						"type": "String"
+					},
+					{
+						"name": "OrderDate",
+						"type": "String"
+					},
+					{
+						"name": "Channel",
+						"type": "String"
+					},
+					{
+						"name": "ProductID",
+						"type": "String"
+					},
+					{
+						"name": "Quantity",
+						"type": "String"
+					},
+					{
+						"name": "UnitPrice",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					},
+					{
+						"name": "Region",
+						"type": "String"
+					},
+					{
+						"name": "WarehouseID",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/LS_ADLS')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('LS_ADLS_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('LS_ADLS_accountKey')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/LS_AzureSynapse')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"server": "[parameters('LS_AzureSynapse_properties_typeProperties_server')]",
+					"database": "[parameters('LS_AzureSynapse_properties_typeProperties_database')]",
+					"encrypt": "mandatory",
+					"trustServerCertificate": false,
+					"authenticationType": "SystemAssignedManagedIdentity"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/LS_BlobStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('LS_BlobStorage_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/LS_OnPrem_SharedPath')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "FileServer",
+				"typeProperties": {
+					"host": "[parameters('LS_OnPrem_SharedPath_properties_typeProperties_host')]",
+					"userId": "[parameters('LS_OnPrem_SharedPath_properties_typeProperties_userId')]",
+					"password": {
+						"type": "SecureString",
+						"value": "[parameters('LS_OnPrem_SharedPath_password')]"
+					}
+				},
+				"connectVia": {
+					"referenceName": "IR-SelfHosted-OnPrem",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/IR-SelfHosted-OnPrem')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wssynapse890-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('wssynapse890-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wssynapse890-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('wssynapse890-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/IR-SelfHosted-OnPrem')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "SelfHosted",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Dataflow1')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "select1"
+						}
+					],
+					"scriptLines": [
+						"source(useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'fssynapse890',",
+						"     fileName: 'Source_File.txt',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: false) ~> source1",
+						"source1 select(skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'fssynapse890',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: false,",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_Orders_etl')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "OrdersRawdata"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "TargetTable"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "OrdersCleanedUpdates"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "OrdersCleanedInserts"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RemoveNullRows"
+						},
+						{
+							"name": "ComputeColumnValue"
+						},
+						{
+							"name": "IdentiyInsertsUpdates"
+						},
+						{
+							"name": "Inserts"
+						},
+						{
+							"name": "Updates"
+						},
+						{
+							"name": "alterRowUpdate"
+						},
+						{
+							"name": "alterRowInsert"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          OrderID as string,",
+						"          CustomerID as string,",
+						"          OrderDate as date 'yyyy-MM-dd',",
+						"          Channel as string,",
+						"          ProductID as string,",
+						"          Quantity as short,",
+						"          UnitPrice as double,",
+						"          Status as string,",
+						"          Region as string,",
+						"          WarehouseID as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     moveFiles: ['csv_Orders','archive'],",
+						"     format: 'delimited',",
+						"     fileSystem: 'bronze',",
+						"     fileName: 'orders.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> OrdersRawdata",
+						"source(output(",
+						"          OrderID as string,",
+						"          CustomerID as string,",
+						"          ProductID as string,",
+						"          Quantity as integer,",
+						"          UnitPrice as decimal(10,2),",
+						"          OrderValue as decimal(10,2),",
+						"          OrderDate as date,",
+						"          OrderDateKey as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'orders_cleaned',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> TargetTable",
+						"OrdersRawdata filter(!(isNull(OrderDate)) && !(isNull(ProductID))) ~> RemoveNullRows",
+						"RemoveNullRows derive(OrderValue = Quantity * UnitPrice,",
+						"          OrderDateKey = toString(year(OrderDate)) + toString(month(OrderDate)) + toString(dayOfMonth(OrderDate))) ~> ComputeColumnValue",
+						"ComputeColumnValue, TargetTable join(OrdersRawdata@OrderID == TargetTable@OrderID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> IdentiyInsertsUpdates",
+						"IdentiyInsertsUpdates split(isNull(TargetTable@OrderID),",
+						"     disjoint: false) ~> Inserts@(Inserts)",
+						"IdentiyInsertsUpdates split((OrdersRawdata@OrderID == TargetTable@OrderID)  &&\r",
+						"(\r",
+						"    ( iif(isNull(OrdersRawdata@CustomerID), \"\", OrdersRawdata@CustomerID) != iif(isNull(TargetTable@CustomerID), \"\", TargetTable@CustomerID) ) &&\r",
+						"    ( iif(isNull(OrdersRawdata@ProductID), \"\", OrdersRawdata@ProductID) != iif(isNull(TargetTable@ProductID), \"\", TargetTable@ProductID) ) && \r",
+						"    ( iif(isNull(OrdersRawdata@UnitPrice), toDouble(0), OrdersRawdata@UnitPrice) != iif(isNull(TargetTable@UnitPrice), toDecimal(0), TargetTable@UnitPrice) ) && \r",
+						"    ( iif(isNull(OrdersRawdata@OrderDate), toDate(\"1900-01-01\"), OrdersRawdata@OrderDate) != iif(isNull(TargetTable@OrderDate), toDate(\"1900-01-01\"),  TargetTable@OrderDate) ) \r",
+						"\r",
+						"),",
+						"     disjoint: false) ~> Updates@(Updates)",
+						"Updates@Updates alterRow(updateIf(true())) ~> alterRowUpdate",
+						"Inserts@Inserts alterRow(insertIf(true())) ~> alterRowInsert",
+						"alterRowUpdate sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'orders_cleaned',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['OrderID'],",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> OrdersCleanedUpdates",
+						"alterRowInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'orders_cleaned',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> OrdersCleanedInserts"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_Suppliers_etl')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzeSuppliersData"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "TargetTable"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SuppliersMasterUpdates"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FilterRank"
+						},
+						{
+							"name": "Join"
+						},
+						{
+							"name": "IdentifyUpdates"
+						},
+						{
+							"name": "Updates"
+						},
+						{
+							"name": "AlterRowInserts"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          SupplierID as string,",
+						"          Name as string,",
+						"          Country as string,",
+						"          AvgLeadTimeDays as short,",
+						"          DefectRate as double,",
+						"          OnTimeDeliveryRate as double,",
+						"          RankScore as double",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'bronze',",
+						"     fileName: 'suppliers.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> BronzeSuppliersData",
+						"source(output(",
+						"          SupplierID as string,",
+						"          SupplierName as string,",
+						"          Country as string,",
+						"          AvgLeadTimeDays as integer,",
+						"          DefectRate as decimal(4,3),",
+						"          OnTimeDeliveryRate as decimal(4,3),",
+						"          RankScore as decimal(4,2)",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'suppliers_master',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> TargetTable",
+						"BronzeSuppliersData filter(RankScore >= 70.0) ~> FilterRank",
+						"FilterRank, TargetTable join(BronzeSuppliersData@SupplierID == TargetTable@SupplierID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> Join",
+						"Join split((!isNull(BronzeSuppliersData@SupplierID)) && (!isNull(TargetTable@SupplierID))  && \r",
+						"(\r",
+						"    iifNull(Name, \"\", Name) != iifNull(SupplierName, \"\", SupplierName)  && \r",
+						"    iifNull(BronzeSuppliersData@Country, \"\", BronzeSuppliersData@Country) != iifNull(TargetTable@Country, \"\", TargetTable@Country) &&\r",
+						"    iifNull(BronzeSuppliersData@AvgLeadTimeDays, 0, BronzeSuppliersData@AvgLeadTimeDays) != iifNull(TargetTable@AvgLeadTimeDays, 0, TargetTable@AvgLeadTimeDays)\r",
+						"),",
+						"     isNull(TargetTable@SupplierID),",
+						"     disjoint: false) ~> IdentifyUpdates@(Updates, Inserts, Other)",
+						"IdentifyUpdates@Updates alterRow(updateIf(true())) ~> Updates",
+						"IdentifyUpdates@Inserts alterRow(insertIf(true())) ~> AlterRowInserts",
+						"Updates sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'suppliers_master',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['SupplierID'],",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          SupplierID = IdentifyUpdates@Updates@SupplierID,",
+						"          Name,",
+						"          Country = IdentifyUpdates@Updates@Country,",
+						"          AvgLeadTimeDays = IdentifyUpdates@Updates@AvgLeadTimeDays,",
+						"          DefectRate = IdentifyUpdates@Updates@DefectRate,",
+						"          OnTimeDeliveryRate = IdentifyUpdates@Updates@OnTimeDeliveryRate,",
+						"          RankScore = IdentifyUpdates@Updates@RankScore,",
+						"          SupplierName",
+						"     )) ~> SuppliersMasterUpdates",
+						"AlterRowInserts sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          SupplierID as string,",
+						"          SupplierName as string,",
+						"          Country as string,",
+						"          AvgLeadTimeDays as integer,",
+						"          DefectRate as decimal(4,3),",
+						"          OnTimeDeliveryRate as decimal(4,3),",
+						"          RankScore as decimal(4,2)",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'suppliers_master',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          SupplierID = IdentifyUpdates@Inserts@SupplierID,",
+						"          SupplierName = Name,",
+						"          Country = IdentifyUpdates@Inserts@Country,",
+						"          AvgLeadTimeDays = IdentifyUpdates@Inserts@AvgLeadTimeDays,",
+						"          DefectRate = IdentifyUpdates@Inserts@DefectRate,",
+						"          OnTimeDeliveryRate = IdentifyUpdates@Inserts@OnTimeDeliveryRate,",
+						"          RankScore = IdentifyUpdates@Inserts@RankScore",
+						"     )) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_inventory_etl')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzeInventoryXML"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "InventorySnapshot"
+						}
+					],
+					"transformations": [
+						{
+							"name": "FlattenXML"
+						},
+						{
+							"name": "AlterRow"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          inventory as (item as (last_updated as date, product_id as string, quantity as short, warehouse_id as string)[])",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'xml',",
+						"     fileSystem: 'bronze',",
+						"     fileName: 'inventory.xml',",
+						"     validationMode: 'none',",
+						"     namespaces: true) ~> BronzeInventoryXML",
+						"BronzeInventoryXML foldDown(unroll(inventory.item, inventory.item),",
+						"     mapColumn(",
+						"          last_updated = inventory.item.last_updated,",
+						"          product_id = inventory.item.product_id,",
+						"          quantity = inventory.item.quantity,",
+						"          warehouse_id = inventory.item.warehouse_id",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> FlattenXML",
+						"FlattenXML alterRow(insertIf(true())) ~> AlterRow",
+						"AlterRow sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'inventory_snapshot',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     truncate: true,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          LastStockedDate = last_updated,",
+						"          ProductID = product_id,",
+						"          Quantity = quantity,",
+						"          WarehouseID = warehouse_id",
+						"     )) ~> InventorySnapshot"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_partner_orders_unroll')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzePartnerOrders"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "PartnerOrders"
+						}
+					],
+					"transformations": [
+						{
+							"name": "flatten1"
+						},
+						{
+							"name": "AlterRowInserts"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          order_items as (price as double, product_id as string, qty as short)[],",
+						"          partner as string,",
+						"          partner_order_id as string,",
+						"          region as string,",
+						"          timestamp as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'json',",
+						"     fileSystem: 'bronze',",
+						"     fileName: 'partner_orders.json',",
+						"     documentForm: 'singleDocument') ~> BronzePartnerOrders",
+						"BronzePartnerOrders foldDown(unroll(order_items, order_items),",
+						"     mapColumn(",
+						"          order_items,",
+						"          partner,",
+						"          partner_order_id,",
+						"          region,",
+						"          timestamp",
+						"     ),",
+						"     skipDuplicateMapInputs: false,",
+						"     skipDuplicateMapOutputs: false) ~> flatten1",
+						"flatten1 alterRow(insertIf(true())) ~> AlterRowInserts",
+						"AlterRowInserts sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          PartnerID as string,",
+						"          OrderID as string,",
+						"          ProductID as string,",
+						"          Price as decimal(10,2),",
+						"          Region as string,",
+						"          OrderDate as date",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'partner_orders_flat',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     truncate: true,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          Price = order_items.price,",
+						"          PartnerID = partner,",
+						"          OrderID = partner_order_id,",
+						"          Region = region,",
+						"          OrderDate = timestamp,",
+						"          ProductID = order_items.product_id",
+						"     )) ~> PartnerOrders"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_product_pricing_scd2')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzeProductMaster"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "TargetTableproductpricehistoryscd2"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "Productpricehistoryscd2Insert"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "Type2Insertsproductpricehistoryscd2"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "Type2Updatesproductpricehistoryscd2"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "Type1Updatesproductpricehistoryscd2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "SurrogateKey"
+						},
+						{
+							"name": "Join"
+						},
+						{
+							"name": "Inserts"
+						},
+						{
+							"name": "Type2UpdateColumns"
+						},
+						{
+							"name": "AlterRowInsert"
+						},
+						{
+							"name": "CheckActive"
+						},
+						{
+							"name": "AlterRowDeactivate"
+						},
+						{
+							"name": "Type2InsertColumns"
+						},
+						{
+							"name": "AlterRowTypeInsert"
+						},
+						{
+							"name": "Type2InsertSurrogateKey"
+						},
+						{
+							"name": "SelectNecessaryColumns"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "RequiredColumns"
+						},
+						{
+							"name": "NewColumn"
+						},
+						{
+							"name": "AlterRowType1Updates"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Category as string,",
+						"          Price as double,",
+						"          ValidFrom as date,",
+						"          ValidTo as date,",
+						"          IsActive as boolean",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'bronze',",
+						"     fileName: 'product_master.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> BronzeProductMaster",
+						"source(output(",
+						"          TargetProductPriceSK as decimal(18,0),",
+						"          ProductId as string,",
+						"          Category as string,",
+						"          ProductName as string,",
+						"          Price as decimal(10,2)",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'query',",
+						"     store: 'synapseanalytics',",
+						"     query: 'SELECT ProductPriceSK AS TargetProductPriceSK, ProductId, Category, ProductName, Price FROM silver.product_price_history_scd2',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> TargetTableproductpricehistoryscd2",
+						"BronzeProductMaster keyGenerate(output(ProductPriceSK as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> SurrogateKey",
+						"SurrogateKey, TargetTableproductpricehistoryscd2 join(BronzeProductMaster@ProductID == TargetTableproductpricehistoryscd2@ProductId,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> Join",
+						"Join split(isNull(TargetTableproductpricehistoryscd2@ProductId),",
+						"     (BronzeProductMaster@ProductID == TargetTableproductpricehistoryscd2@ProductId) && \r",
+						"(\r",
+						"    iifNull(TargetTableproductpricehistoryscd2@Price, 0, TargetTableproductpricehistoryscd2@Price) != \r",
+						"    iifNull(BronzeProductMaster@Price, 0, BronzeProductMaster@Price)\r",
+						"),",
+						"     disjoint: false) ~> Inserts@(Insert, Update)",
+						"Inserts@Update derive(dcValidTo = currentTimestamp(),",
+						"          dcDeactivate = 0) ~> Type2UpdateColumns",
+						"CheckActive alterRow(insertIf(true())) ~> AlterRowInsert",
+						"Inserts@Insert derive(CheckActive = iif(IsActive, 1, 0)) ~> CheckActive",
+						"Type2UpdateColumns alterRow(updateIf(true())) ~> AlterRowDeactivate",
+						"Inserts@Update derive(dcInsertValidFrom = currentTimestamp(),",
+						"          dcInsertValidTo = toDate(\"9999-12-31\"),",
+						"          dcActive = 1) ~> Type2InsertColumns",
+						"Type2InsertSurrogateKey alterRow(insertIf(true())) ~> AlterRowTypeInsert",
+						"SelectNecessaryColumns keyGenerate(output(Type2InsertProductPriceSK as long),",
+						"     startAt: 1L,",
+						"     stepValue: 1L) ~> Type2InsertSurrogateKey",
+						"Type2InsertColumns select(mapColumn(",
+						"          ProductID = Inserts@Update@ProductID,",
+						"          ProductName = Inserts@Update@ProductName,",
+						"          Category = Inserts@Update@Category,",
+						"          Price = Inserts@Update@Price,",
+						"          dcInsertValidFrom,",
+						"          dcInsertValidTo,",
+						"          dcActive",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> SelectNecessaryColumns",
+						"Join split((BronzeProductMaster@ProductID == TargetTableproductpricehistoryscd2@ProductId) && \r",
+						"(\r",
+						"    iifNull(BronzeProductMaster@Category, \"\", BronzeProductMaster@Category) !=\r",
+						"    iifNull(TargetTableproductpricehistoryscd2@Category, \"\", TargetTableproductpricehistoryscd2@Category)\r",
+						"),",
+						"     disjoint: false) ~> split1@(Type1Updates, DefaultOutput)",
+						"split1@Type1Updates select(mapColumn(",
+						"          ProductID = split1@Type1Updates@ProductID,",
+						"          ProductName = split1@Type1Updates@ProductName,",
+						"          Category = split1@Type1Updates@Category,",
+						"          Price = split1@Type1Updates@Price,",
+						"          ValidFrom,",
+						"          ValidTo,",
+						"          IsActive,",
+						"          ProductPriceSK,",
+						"          TargetProductPriceSK",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> RequiredColumns",
+						"RequiredColumns derive(dcLSCurrent = iif(IsActive, 1, 0)) ~> NewColumn",
+						"NewColumn alterRow(updateIf(true())) ~> AlterRowType1Updates",
+						"AlterRowInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ProductPriceSK as decimal(18,0),",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Category as string,",
+						"          Price as decimal(10,2),",
+						"          ValidFrom as date,",
+						"          ValidTo as date,",
+						"          IsCurrent as boolean",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'product_price_history_scd2',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ProductID = Inserts@Insert@ProductID,",
+						"          ProductName = Inserts@Insert@ProductName,",
+						"          Category,",
+						"          Price = Inserts@Insert@Price,",
+						"          ValidFrom,",
+						"          ValidTo,",
+						"          IsCurrent = CheckActive,",
+						"          ProductPriceSK",
+						"     )) ~> Productpricehistoryscd2Insert",
+						"AlterRowTypeInsert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ProductPriceSK as decimal(18,0),",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Category as string,",
+						"          Price as decimal(10,2),",
+						"          ValidFrom as date,",
+						"          ValidTo as date,",
+						"          IsCurrent as boolean",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'product_price_history_scd2',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ProductID,",
+						"          ProductName,",
+						"          Category,",
+						"          Price,",
+						"          ValidFrom = dcInsertValidFrom,",
+						"          ValidTo = dcInsertValidTo,",
+						"          IsCurrent = dcActive,",
+						"          ProductPriceSK = Type2InsertProductPriceSK",
+						"     )) ~> Type2Insertsproductpricehistoryscd2",
+						"AlterRowDeactivate sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          ProductPriceSK as decimal(18,0),",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Category as string,",
+						"          Price as decimal(10,2),",
+						"          ValidFrom as date,",
+						"          ValidTo as date,",
+						"          IsCurrent as boolean",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'product_price_history_scd2',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['ProductPriceSK','ProductID'],",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ProductID = Inserts@Update@ProductID,",
+						"          ProductName = Inserts@Update@ProductName,",
+						"          Category,",
+						"          Price = Inserts@Update@Price,",
+						"          ValidFrom,",
+						"          ValidTo = dcValidTo,",
+						"          IsCurrent = dcDeactivate,",
+						"          ProductPriceSK = TargetProductPriceSK",
+						"     )) ~> Type2Updatesproductpricehistoryscd2",
+						"AlterRowType1Updates sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          ProductPriceSK as decimal(18,0),",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Category as string,",
+						"          Price as decimal(10,2),",
+						"          ValidFrom as date,",
+						"          ValidTo as date,",
+						"          IsCurrent as boolean",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'product_price_history_scd2',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['ProductPriceSK','ProductID'],",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ProductID,",
+						"          ProductName,",
+						"          Category,",
+						"          Price,",
+						"          ValidFrom,",
+						"          ValidTo,",
+						"          ProductPriceSK = TargetProductPriceSK,",
+						"          IsCurrent = dcLSCurrent",
+						"     )) ~> Type1Updatesproductpricehistoryscd2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_returns_etl')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzeReturnsdata"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "ReturnsCategorized"
+						}
+					],
+					"transformations": [
+						{
+							"name": "AlterRow"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ReturnID as string,",
+						"          OrderID as string,",
+						"          ProductID as string,",
+						"          Reason as string,",
+						"          ReturnDate as date,",
+						"          ReturnCost as double,",
+						"          DefectCode as string,",
+						"          CustomerRegion as string",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'bronze',",
+						"     fileName: 'returns.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> BronzeReturnsdata",
+						"BronzeReturnsdata alterRow(insertIf(true())) ~> AlterRow",
+						"AlterRow sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ReturnID as string,",
+						"          OrderID as string,",
+						"          ProductID as string,",
+						"          Reason as string,",
+						"          ReturnDate as date,",
+						"          ReturnCost as decimal(10,2),",
+						"          DefectCode as string,",
+						"          CustomerRegion as string",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'returns_categorized',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     truncate: true,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ReturnID,",
+						"          OrderID,",
+						"          ProductID,",
+						"          Reason,",
+						"          ReturnDate,",
+						"          ReturnCost,",
+						"          DefectCode,",
+						"          CustomerRegion",
+						"     )) ~> ReturnsCategorized"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/df_shipping_etl')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_ADLS",
+								"type": "LinkedServiceReference"
+							},
+							"name": "BronzeShippingdata"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverOrdersCleaned"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverShippingEnriched"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "ShippingEnrichedInserts"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "ShippingEnrichedUpdates"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ShippingDays"
+						},
+						{
+							"name": "GetRegion"
+						},
+						{
+							"name": "IdentifyInsertsUpdates"
+						},
+						{
+							"name": "IdentifyInserts"
+						},
+						{
+							"name": "alterRowInserts"
+						},
+						{
+							"name": "alterRowUpdates"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "select2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          ShipmentID as string,",
+						"          OrderID as string,",
+						"          Carrier as string,",
+						"          ShipDate as date,",
+						"          DeliveryDate as date,",
+						"          DelayReason as string,",
+						"          DistanceKM as short,",
+						"          WeightKG as double",
+						"     ),",
+						"     useSchema: false,",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'bronze',",
+						"     fileName: 'shipping_data.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> BronzeShippingdata",
+						"source(output(",
+						"          OrderId as string,",
+						"          Region as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'query',",
+						"     store: 'synapseanalytics',",
+						"     query: 'SELECT OrderId, Region FROM silver.orders_cleaned',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> SilverOrdersCleaned",
+						"source(output(",
+						"          ShippingID as string,",
+						"          OrderID as string,",
+						"          Carrier as string,",
+						"          ShipDate as date,",
+						"          DeliveryDate as date,",
+						"          IsDelayed as boolean,",
+						"          ShippingTimeDays as integer,",
+						"          Region as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'shipping_enriched',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> SilverShippingEnriched",
+						"BronzeShippingdata derive(ShippingTimeDays = toInteger((toLong(toTimestamp(DeliveryDate)) - toLong(toTimestamp(ShipDate)) ) / (1000 * 60 * 60 * 24))) ~> ShippingDays",
+						"ShippingDays, SilverOrdersCleaned lookup(BronzeShippingdata@OrderID == SilverOrdersCleaned@OrderId,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> GetRegion",
+						"GetRegion, SilverShippingEnriched join(ShipmentID == ShippingID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> IdentifyInsertsUpdates",
+						"IdentifyInsertsUpdates split(isNull(ShippingID),",
+						"     (ShipmentID == ShippingID) && \r",
+						"(\r",
+						"   ( iif(isNull(BronzeShippingdata@Carrier), \"\", BronzeShippingdata@Carrier) != iif(isNull(SilverShippingEnriched@Carrier), \"\", SilverShippingEnriched@Carrier) ) &&\r",
+						"   ( iif(isNull(BronzeShippingdata@ShipDate), toDate(\"1900-01-01\"), BronzeShippingdata@ShipDate) != iif(isNull(SilverShippingEnriched@ShipDate), toDate(\"1900-01-01\"), SilverShippingEnriched@ShipDate) )\r",
+						"),",
+						"     disjoint: false) ~> IdentifyInserts@(Inserts, Updates)",
+						"select1 alterRow(insertIf(true())) ~> alterRowInserts",
+						"select2 alterRow(updateIf(true())) ~> alterRowUpdates",
+						"IdentifyInserts@Inserts select(mapColumn(",
+						"          ShipmentID,",
+						"          OrderID = IdentifyInserts@Inserts@OrderID,",
+						"          Carrier = IdentifyInserts@Inserts@Carrier,",
+						"          ShipDate = IdentifyInserts@Inserts@ShipDate,",
+						"          DeliveryDate = IdentifyInserts@Inserts@DeliveryDate,",
+						"          DelayReason,",
+						"          DistanceKM,",
+						"          WeightKG,",
+						"          ShippingTimeDays = IdentifyInserts@Inserts@ShippingTimeDays,",
+						"          Region = IdentifyInserts@Inserts@Region,",
+						"          IsDelayed",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"IdentifyInserts@Updates select(mapColumn(",
+						"          ShippingID = ShipmentID,",
+						"          OrderID = IdentifyInserts@Updates@OrderID,",
+						"          Carrier = IdentifyInserts@Updates@Carrier,",
+						"          ShipDate = IdentifyInserts@Updates@ShipDate,",
+						"          DeliveryDate = IdentifyInserts@Updates@DeliveryDate,",
+						"          DelayReason,",
+						"          DistanceKM,",
+						"          WeightKG,",
+						"          ShippingTimeDays = IdentifyInserts@Updates@ShippingTimeDays,",
+						"          IsDelayed,",
+						"          Region = IdentifyInserts@Updates@Region",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select2",
+						"alterRowInserts sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          ShippingID as string,",
+						"          OrderID as string,",
+						"          Carrier as string,",
+						"          ShipDate as date,",
+						"          DeliveryDate as date,",
+						"          IsDelayed as boolean,",
+						"          ShippingTimeDays as integer,",
+						"          Region as string",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'shipping_enriched',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ShippingID = ShipmentID,",
+						"          OrderID,",
+						"          Carrier,",
+						"          ShipDate,",
+						"          DeliveryDate,",
+						"          IsDelayed,",
+						"          ShippingTimeDays,",
+						"          Region",
+						"     )) ~> ShippingEnrichedInserts",
+						"alterRowUpdates sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'shipping_enriched',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['ShippingID'],",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          ShippingID,",
+						"          OrderID,",
+						"          Carrier,",
+						"          ShipDate,",
+						"          DeliveryDate,",
+						"          DelayReason,",
+						"          DistanceKM,",
+						"          WeightKG,",
+						"          ShippingTimeDays,",
+						"          IsDelayed,",
+						"          Region",
+						"     )) ~> ShippingEnrichedUpdates"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_ADLS')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Credential1')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {
+					"resourceId": "/subscriptions/70f5a4ce-dee2-44f5-85b2-52dd7da72b96/resourceGroups/RG_Synapse/providers/Microsoft.ManagedIdentity/userAssignedIdentities/MI_generic"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Silver Schema Objects')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE SCHEMA silver;\n\n\n-- =========================================================\n-- 🔷 SILVER LAYER: Cleansed and Transformed Tables\n-- =========================================================\n\n-- 1. Orders Cleaned\nCREATE TABLE silver.orders_cleaned (\n    OrderID VARCHAR(50),\n    CustomerID VARCHAR(50),\n    ProductID VARCHAR(50),\n    Quantity INT,\n    UnitPrice DECIMAL(10, 2),\n    OrderValue DECIMAL(10, 2),\n    OrderDate DATE,\n    OrderDateKey INT\n);\n\n\nSELECT * FROM silver.orders_cleaned",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create bronze schema objects')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "\nCREATE SCHEMA bronze;\n\n-- Step 1: External Data Source (modify for your storage account)\nCREATE EXTERNAL DATA SOURCE [RawStorage] WITH\n(\n\tLOCATION = 'https://adlsaccountgen2.blob.core.windows.net/'\n);\n\n\n-- Step 2: CSV File Format\nCREATE EXTERNAL FILE FORMAT CsvFormat WITH\n(\n\tFORMAT_TYPE = DELIMITEDTEXT,\n\tFORMAT_OPTIONS (FIELD_TERMINATOR = ',', STRING_DELIMITER = '\"', FIRST_ROW = 2)\n);\n\n-- Step 3: External Tables\n\n-- 1. Orders\nCREATE EXTERNAL TABLE bronze.orders_raw (\n    OrderID NVARCHAR(50),\n    CustomerID NVARCHAR(50),\n    OrderDate  NVARCHAR(50),\n\tChannel NVARCHAR(50),\n\tProductID NVARCHAR(50),\n\tQuantity NVARCHAR(50),\n\tUnitPrice NVARCHAR(50),\n\tStatus NVARCHAR(50),\n\tRegion NVARCHAR(50),\n\tWarehouseID NVARCHAR(50)\n)\nWITH (\n    LOCATION = '/bronze/',\n    DATA_SOURCE = RawStorage,\n    FILE_FORMAT = CsvFormat\n);\n\n\n--DROP EXTERNAL TABLE bronze.orders_raw \n\n--SELECT top 5 * FROM bronze.orders_raw\n\nCREATE EXTERNAL TABLE bronze.shipping_raw (\n\n\tShipmentID NVARCHAR(50),\n\tOrderID NVARCHAR(50),\n\tCarrier NVARCHAR(50),\n\tShipDate NVARCHAR(50),\n\tDeliveryDate NVARCHAR(50),\n\tDelayReason NVARCHAR(50),\n\tDistanceKM NVARCHAR(50),\n\tWeightKG NVARCHAR(50)\n)\nWITH\n(\n\tLOCATION = '/bronze/',\n\tDATA_SOURCE = [RawStorage],\n\tFILE_FORMAT = CsvFormat\n)\n\n--SELECT TOP 1 * FROM  bronze.shipping_raw\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "InventoryMgmt",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SELECT_CSV_Orders_data')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP 10 *\nFROM OPENROWSET(\n    BULK 'https://adlsaccountgen2.blob.core.windows.net/bronze/csv_Orders',\n    FORMAT = 'CSV',\n    HEADER_ROW = TRUE\n) WITH (\n    OrderID VARCHAR(500),\n    CustomerID VARCHAR(500),\n    OrderDate VARCHAR(500),\n    Channel VARCHAR(500),\n    ProductID VARCHAR(500),\n    Quantity VARCHAR(500),\n    UnitPrice VARCHAR(500),\n    Status VARCHAR(500),\n    Region VARCHAR(500),\n    WarehouseID VARCHAR(500)\n\n) AS rows;\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT TOP (100) [OrderID]\n,[CustomerID]\n,[ProductID]\n,[Quantity]\n,[UnitPrice]\n,[OrderValue]\n,[OrderDate]\n,[OrderDateKey]\n FROM [silver].[orders_cleaned]",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "\nALTER TABLE [silver].[orders_cleaned]\nADD \t[Region] [varchar](50)  NULL",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/DedicatedSQLPool')]",
+			"type": "Microsoft.Synapse/workspaces/sqlPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"collation": "SQL_Latin1_General_CP1_CI_AS",
+				"maxSizeBytes": 263882790666240,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "westus2"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/pl_Transform_Partner_Orders')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Transform Partner Orders Data",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "df_partner_orders_unroll",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"BronzePartnerOrders": {},
+									"PartnerOrders": {}
+								}
+							},
+							"staging": {
+								"linkedService": {
+									"referenceName": "LS_BlobStorage",
+									"type": "LinkedServiceReference"
+								},
+								"folderPath": "staging"
+							},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]",
+				"[concat(variables('workspaceId'), '/dataflows/df_partner_orders_unroll')]",
+				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
+			]
+		}
+	]
+}
