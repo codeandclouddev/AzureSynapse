@@ -1,0 +1,17 @@
+{
+	"name": "LS_OnPrem_SharedPath",
+	"type": "Microsoft.Synapse/workspaces/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "FileServer",
+		"typeProperties": {
+			"host": "\\\\DESKTOP-4C6KG4E\\advanced_supply_chain_sample_data",
+			"userId": "Rohit",
+			"encryptedCredential": "eyJDcmVkZW50aWFsSWQiOiJhYTQzMDU3YS1hODA2LTQyNjctOTQ3OS04YTllMTA3MDYxOTgiLCJWZXJzaW9uIjoiMi4wIiwiQ2xhc3NUeXBlIjoiTWljcm9zb2Z0LkRhdGFQcm94eS5Db3JlLkludGVyU2VydmljZURhdGFDb250cmFjdC5DcmVkZW50aWFsU1UwNkNZMTQifQ=="
+		},
+		"connectVia": {
+			"referenceName": "IR-SelfHosted-OnPrem",
+			"type": "IntegrationRuntimeReference"
+		}
+	}
+}

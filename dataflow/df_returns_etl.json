@@ -1,0 +1,91 @@
+{
+	"name": "df_returns_etl",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "BronzeReturnsdata"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ReturnsCategorized"
+				}
+			],
+			"transformations": [
+				{
+					"name": "AlterRow"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ReturnID as string,",
+				"          OrderID as string,",
+				"          ProductID as string,",
+				"          Reason as string,",
+				"          ReturnDate as date,",
+				"          ReturnCost as double,",
+				"          DefectCode as string,",
+				"          CustomerRegion as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'bronze',",
+				"     fileName: 'returns.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> BronzeReturnsdata",
+				"BronzeReturnsdata alterRow(insertIf(true())) ~> AlterRow",
+				"AlterRow sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ReturnID as string,",
+				"          OrderID as string,",
+				"          ProductID as string,",
+				"          Reason as string,",
+				"          ReturnDate as date,",
+				"          ReturnCost as decimal(10,2),",
+				"          DefectCode as string,",
+				"          CustomerRegion as string",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'returns_categorized',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     truncate: true,",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ReturnID,",
+				"          OrderID,",
+				"          ProductID,",
+				"          Reason,",
+				"          ReturnDate,",
+				"          ReturnCost,",
+				"          DefectCode,",
+				"          CustomerRegion",
+				"     )) ~> ReturnsCategorized"
+			]
+		}
+	}
+}

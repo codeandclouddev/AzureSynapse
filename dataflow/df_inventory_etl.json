@@ -1,0 +1,79 @@
+{
+	"name": "df_inventory_etl",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "BronzeInventoryXML"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "InventorySnapshot"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FlattenXML"
+				},
+				{
+					"name": "AlterRow"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          inventory as (item as (last_updated as date, product_id as string, quantity as short, warehouse_id as string)[])",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'xml',",
+				"     fileSystem: 'bronze',",
+				"     fileName: 'inventory.xml',",
+				"     validationMode: 'none',",
+				"     namespaces: true) ~> BronzeInventoryXML",
+				"BronzeInventoryXML foldDown(unroll(inventory.item, inventory.item),",
+				"     mapColumn(",
+				"          last_updated = inventory.item.last_updated,",
+				"          product_id = inventory.item.product_id,",
+				"          quantity = inventory.item.quantity,",
+				"          warehouse_id = inventory.item.warehouse_id",
+				"     ),",
+				"     skipDuplicateMapInputs: false,",
+				"     skipDuplicateMapOutputs: false) ~> FlattenXML",
+				"FlattenXML alterRow(insertIf(true())) ~> AlterRow",
+				"AlterRow sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'inventory_snapshot',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     truncate: true,",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          LastStockedDate = last_updated,",
+				"          ProductID = product_id,",
+				"          Quantity = quantity,",
+				"          WarehouseID = warehouse_id",
+				"     )) ~> InventorySnapshot"
+			]
+		}
+	}
+}

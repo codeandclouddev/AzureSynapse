@@ -1,0 +1,17 @@
+{
+	"name": "Create bronze schema objects",
+	"properties": {
+		"content": {
+			"query": "\nCREATE SCHEMA bronze;\n\n-- Step 1: External Data Source (modify for your storage account)\nCREATE EXTERNAL DATA SOURCE [RawStorage] WITH\n(\n\tLOCATION = 'https://adlsaccountgen2.blob.core.windows.net/'\n);\n\n\n-- Step 2: CSV File Format\nCREATE EXTERNAL FILE FORMAT CsvFormat WITH\n(\n\tFORMAT_TYPE = DELIMITEDTEXT,\n\tFORMAT_OPTIONS (FIELD_TERMINATOR = ',', STRING_DELIMITER = '\"', FIRST_ROW = 2)\n);\n\n-- Step 3: External Tables\n\n-- 1. Orders\nCREATE EXTERNAL TABLE bronze.orders_raw (\n    OrderID NVARCHAR(50),\n    CustomerID NVARCHAR(50),\n    OrderDate  NVARCHAR(50),\n\tChannel NVARCHAR(50),\n\tProductID NVARCHAR(50),\n\tQuantity NVARCHAR(50),\n\tUnitPrice NVARCHAR(50),\n\tStatus NVARCHAR(50),\n\tRegion NVARCHAR(50),\n\tWarehouseID NVARCHAR(50)\n)\nWITH (\n    LOCATION = '/bronze/',\n    DATA_SOURCE = RawStorage,\n    FILE_FORMAT = CsvFormat\n);\n\n\n--DROP EXTERNAL TABLE bronze.orders_raw \n\n--SELECT top 5 * FROM bronze.orders_raw\n\nCREATE EXTERNAL TABLE bronze.shipping_raw (\n\n\tShipmentID NVARCHAR(50),\n\tOrderID NVARCHAR(50),\n\tCarrier NVARCHAR(50),\n\tShipDate NVARCHAR(50),\n\tDeliveryDate NVARCHAR(50),\n\tDelayReason NVARCHAR(50),\n\tDistanceKM NVARCHAR(50),\n\tWeightKG NVARCHAR(50)\n)\nWITH\n(\n\tLOCATION = '/bronze/',\n\tDATA_SOURCE = [RawStorage],\n\tFILE_FORMAT = CsvFormat\n)\n\n--SELECT TOP 1 * FROM  bronze.shipping_raw\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "InventoryMgmt",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

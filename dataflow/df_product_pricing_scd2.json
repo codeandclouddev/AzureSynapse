@@ -1,0 +1,336 @@
+{
+	"name": "df_product_pricing_scd2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "BronzeProductMaster"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "TargetTableproductpricehistoryscd2"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Productpricehistoryscd2Insert"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Type2Insertsproductpricehistoryscd2"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Type2Updatesproductpricehistoryscd2"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "Type1Updatesproductpricehistoryscd2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "SurrogateKey"
+				},
+				{
+					"name": "Join"
+				},
+				{
+					"name": "Inserts"
+				},
+				{
+					"name": "Type2UpdateColumns"
+				},
+				{
+					"name": "AlterRowInsert"
+				},
+				{
+					"name": "CheckActive"
+				},
+				{
+					"name": "AlterRowDeactivate"
+				},
+				{
+					"name": "Type2InsertColumns"
+				},
+				{
+					"name": "AlterRowTypeInsert"
+				},
+				{
+					"name": "Type2InsertSurrogateKey"
+				},
+				{
+					"name": "SelectNecessaryColumns"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "RequiredColumns"
+				},
+				{
+					"name": "NewColumn"
+				},
+				{
+					"name": "AlterRowType1Updates"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Category as string,",
+				"          Price as double,",
+				"          ValidFrom as date,",
+				"          ValidTo as date,",
+				"          IsActive as boolean",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'bronze',",
+				"     fileName: 'product_master.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> BronzeProductMaster",
+				"source(output(",
+				"          TargetProductPriceSK as decimal(18,0),",
+				"          ProductId as string,",
+				"          Category as string,",
+				"          ProductName as string,",
+				"          Price as decimal(10,2)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'synapseanalytics',",
+				"     query: 'SELECT ProductPriceSK AS TargetProductPriceSK, ProductId, Category, ProductName, Price FROM silver.product_price_history_scd2',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     staged: true) ~> TargetTableproductpricehistoryscd2",
+				"BronzeProductMaster keyGenerate(output(ProductPriceSK as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> SurrogateKey",
+				"SurrogateKey, TargetTableproductpricehistoryscd2 join(BronzeProductMaster@ProductID == TargetTableproductpricehistoryscd2@ProductId,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> Join",
+				"Join split(isNull(TargetTableproductpricehistoryscd2@ProductId),",
+				"     (BronzeProductMaster@ProductID == TargetTableproductpricehistoryscd2@ProductId) && \r",
+				"(\r",
+				"    iifNull(TargetTableproductpricehistoryscd2@Price, 0, TargetTableproductpricehistoryscd2@Price) != \r",
+				"    iifNull(BronzeProductMaster@Price, 0, BronzeProductMaster@Price)\r",
+				"),",
+				"     disjoint: false) ~> Inserts@(Insert, Update)",
+				"Inserts@Update derive(dcValidTo = currentTimestamp(),",
+				"          dcDeactivate = 0) ~> Type2UpdateColumns",
+				"CheckActive alterRow(insertIf(true())) ~> AlterRowInsert",
+				"Inserts@Insert derive(CheckActive = iif(IsActive, 1, 0)) ~> CheckActive",
+				"Type2UpdateColumns alterRow(updateIf(true())) ~> AlterRowDeactivate",
+				"Inserts@Update derive(dcInsertValidFrom = currentTimestamp(),",
+				"          dcInsertValidTo = toDate(\"9999-12-31\"),",
+				"          dcActive = 1) ~> Type2InsertColumns",
+				"Type2InsertSurrogateKey alterRow(insertIf(true())) ~> AlterRowTypeInsert",
+				"SelectNecessaryColumns keyGenerate(output(Type2InsertProductPriceSK as long),",
+				"     startAt: 1L,",
+				"     stepValue: 1L) ~> Type2InsertSurrogateKey",
+				"Type2InsertColumns select(mapColumn(",
+				"          ProductID = Inserts@Update@ProductID,",
+				"          ProductName = Inserts@Update@ProductName,",
+				"          Category = Inserts@Update@Category,",
+				"          Price = Inserts@Update@Price,",
+				"          dcInsertValidFrom,",
+				"          dcInsertValidTo,",
+				"          dcActive",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> SelectNecessaryColumns",
+				"Join split((BronzeProductMaster@ProductID == TargetTableproductpricehistoryscd2@ProductId) && \r",
+				"(\r",
+				"    iifNull(BronzeProductMaster@Category, \"\", BronzeProductMaster@Category) !=\r",
+				"    iifNull(TargetTableproductpricehistoryscd2@Category, \"\", TargetTableproductpricehistoryscd2@Category)\r",
+				"),",
+				"     disjoint: false) ~> split1@(Type1Updates, DefaultOutput)",
+				"split1@Type1Updates select(mapColumn(",
+				"          ProductID = split1@Type1Updates@ProductID,",
+				"          ProductName = split1@Type1Updates@ProductName,",
+				"          Category = split1@Type1Updates@Category,",
+				"          Price = split1@Type1Updates@Price,",
+				"          ValidFrom,",
+				"          ValidTo,",
+				"          IsActive,",
+				"          ProductPriceSK,",
+				"          TargetProductPriceSK",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> RequiredColumns",
+				"RequiredColumns derive(dcLSCurrent = iif(IsActive, 1, 0)) ~> NewColumn",
+				"NewColumn alterRow(updateIf(true())) ~> AlterRowType1Updates",
+				"AlterRowInsert sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ProductPriceSK as decimal(18,0),",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Category as string,",
+				"          Price as decimal(10,2),",
+				"          ValidFrom as date,",
+				"          ValidTo as date,",
+				"          IsCurrent as boolean",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'product_price_history_scd2',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ProductID = Inserts@Insert@ProductID,",
+				"          ProductName = Inserts@Insert@ProductName,",
+				"          Category,",
+				"          Price = Inserts@Insert@Price,",
+				"          ValidFrom,",
+				"          ValidTo,",
+				"          IsCurrent = CheckActive,",
+				"          ProductPriceSK",
+				"     )) ~> Productpricehistoryscd2Insert",
+				"AlterRowTypeInsert sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ProductPriceSK as decimal(18,0),",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Category as string,",
+				"          Price as decimal(10,2),",
+				"          ValidFrom as date,",
+				"          ValidTo as date,",
+				"          IsCurrent as boolean",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'product_price_history_scd2',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ProductID,",
+				"          ProductName,",
+				"          Category,",
+				"          Price,",
+				"          ValidFrom = dcInsertValidFrom,",
+				"          ValidTo = dcInsertValidTo,",
+				"          IsCurrent = dcActive,",
+				"          ProductPriceSK = Type2InsertProductPriceSK",
+				"     )) ~> Type2Insertsproductpricehistoryscd2",
+				"AlterRowDeactivate sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          ProductPriceSK as decimal(18,0),",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Category as string,",
+				"          Price as decimal(10,2),",
+				"          ValidFrom as date,",
+				"          ValidTo as date,",
+				"          IsCurrent as boolean",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'product_price_history_scd2',",
+				"     insertable: false,",
+				"     updateable: true,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     keys:['ProductPriceSK','ProductID'],",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ProductID = Inserts@Update@ProductID,",
+				"          ProductName = Inserts@Update@ProductName,",
+				"          Category,",
+				"          Price = Inserts@Update@Price,",
+				"          ValidFrom,",
+				"          ValidTo = dcValidTo,",
+				"          IsCurrent = dcDeactivate,",
+				"          ProductPriceSK = TargetProductPriceSK",
+				"     )) ~> Type2Updatesproductpricehistoryscd2",
+				"AlterRowType1Updates sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          ProductPriceSK as decimal(18,0),",
+				"          ProductID as string,",
+				"          ProductName as string,",
+				"          Category as string,",
+				"          Price as decimal(10,2),",
+				"          ValidFrom as date,",
+				"          ValidTo as date,",
+				"          IsCurrent as boolean",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'product_price_history_scd2',",
+				"     insertable: false,",
+				"     updateable: true,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     keys:['ProductPriceSK','ProductID'],",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ProductID,",
+				"          ProductName,",
+				"          Category,",
+				"          Price,",
+				"          ValidFrom,",
+				"          ValidTo,",
+				"          ProductPriceSK = TargetProductPriceSK,",
+				"          IsCurrent = dcLSCurrent",
+				"     )) ~> Type1Updatesproductpricehistoryscd2"
+			]
+		}
+	}
+}

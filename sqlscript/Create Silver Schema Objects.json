@@ -1,0 +1,17 @@
+{
+	"name": "Create Silver Schema Objects",
+	"properties": {
+		"content": {
+			"query": "CREATE SCHEMA silver;\n\n\n-- =========================================================\n-- 🔷 SILVER LAYER: Cleansed and Transformed Tables\n-- =========================================================\n\n-- 1. Orders Cleaned\nCREATE TABLE silver.orders_cleaned (\n    OrderID VARCHAR(50),\n    CustomerID VARCHAR(50),\n    ProductID VARCHAR(50),\n    Quantity INT,\n    UnitPrice DECIMAL(10, 2),\n    OrderValue DECIMAL(10, 2),\n    OrderDate DATE,\n    OrderDateKey INT\n);\n\n\nSELECT * FROM silver.orders_cleaned",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

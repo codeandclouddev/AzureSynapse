@@ -1,0 +1,159 @@
+{
+	"name": "df_Orders_etl",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OrdersRawdata"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "TargetTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OrdersCleanedUpdates"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "OrdersCleanedInserts"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RemoveNullRows"
+				},
+				{
+					"name": "ComputeColumnValue"
+				},
+				{
+					"name": "IdentiyInsertsUpdates"
+				},
+				{
+					"name": "Inserts"
+				},
+				{
+					"name": "Updates"
+				},
+				{
+					"name": "alterRowUpdate"
+				},
+				{
+					"name": "alterRowInsert"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          OrderID as string,",
+				"          CustomerID as string,",
+				"          OrderDate as date 'yyyy-MM-dd',",
+				"          Channel as string,",
+				"          ProductID as string,",
+				"          Quantity as short,",
+				"          UnitPrice as double,",
+				"          Status as string,",
+				"          Region as string,",
+				"          WarehouseID as string",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     moveFiles: ['csv_Orders','archive'],",
+				"     format: 'delimited',",
+				"     fileSystem: 'bronze',",
+				"     fileName: 'orders.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> OrdersRawdata",
+				"source(output(",
+				"          OrderID as string,",
+				"          CustomerID as string,",
+				"          ProductID as string,",
+				"          Quantity as integer,",
+				"          UnitPrice as decimal(10,2),",
+				"          OrderValue as decimal(10,2),",
+				"          OrderDate as date,",
+				"          OrderDateKey as integer",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'orders_cleaned',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     staged: true) ~> TargetTable",
+				"OrdersRawdata filter(!(isNull(OrderDate)) && !(isNull(ProductID))) ~> RemoveNullRows",
+				"RemoveNullRows derive(OrderValue = Quantity * UnitPrice,",
+				"          OrderDateKey = toString(year(OrderDate)) + toString(month(OrderDate)) + toString(dayOfMonth(OrderDate))) ~> ComputeColumnValue",
+				"ComputeColumnValue, TargetTable join(OrdersRawdata@OrderID == TargetTable@OrderID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> IdentiyInsertsUpdates",
+				"IdentiyInsertsUpdates split(isNull(TargetTable@OrderID),",
+				"     disjoint: false) ~> Inserts@(Inserts)",
+				"IdentiyInsertsUpdates split((OrdersRawdata@OrderID == TargetTable@OrderID)  &&\r",
+				"(\r",
+				"    ( iif(isNull(OrdersRawdata@CustomerID), \"\", OrdersRawdata@CustomerID) != iif(isNull(TargetTable@CustomerID), \"\", TargetTable@CustomerID) ) &&\r",
+				"    ( iif(isNull(OrdersRawdata@ProductID), \"\", OrdersRawdata@ProductID) != iif(isNull(TargetTable@ProductID), \"\", TargetTable@ProductID) ) && \r",
+				"    ( iif(isNull(OrdersRawdata@UnitPrice), toDouble(0), OrdersRawdata@UnitPrice) != iif(isNull(TargetTable@UnitPrice), toDecimal(0), TargetTable@UnitPrice) ) && \r",
+				"    ( iif(isNull(OrdersRawdata@OrderDate), toDate(\"1900-01-01\"), OrdersRawdata@OrderDate) != iif(isNull(TargetTable@OrderDate), toDate(\"1900-01-01\"),  TargetTable@OrderDate) ) \r",
+				"\r",
+				"),",
+				"     disjoint: false) ~> Updates@(Updates)",
+				"Updates@Updates alterRow(updateIf(true())) ~> alterRowUpdate",
+				"Inserts@Inserts alterRow(insertIf(true())) ~> alterRowInsert",
+				"alterRowUpdate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'orders_cleaned',",
+				"     insertable: false,",
+				"     updateable: true,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     keys:['OrderID'],",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> OrdersCleanedUpdates",
+				"alterRowInsert sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'orders_cleaned',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> OrdersCleanedInserts"
+			]
+		}
+	}
+}

@@ -1,0 +1,238 @@
+{
+	"name": "df_shipping_etl",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "BronzeShippingdata"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SilverOrdersCleaned"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SilverShippingEnriched"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ShippingEnrichedInserts"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "ShippingEnrichedUpdates"
+				}
+			],
+			"transformations": [
+				{
+					"name": "ShippingDays"
+				},
+				{
+					"name": "GetRegion"
+				},
+				{
+					"name": "IdentifyInsertsUpdates"
+				},
+				{
+					"name": "IdentifyInserts"
+				},
+				{
+					"name": "alterRowInserts"
+				},
+				{
+					"name": "alterRowUpdates"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "select2"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          ShipmentID as string,",
+				"          OrderID as string,",
+				"          Carrier as string,",
+				"          ShipDate as date,",
+				"          DeliveryDate as date,",
+				"          DelayReason as string,",
+				"          DistanceKM as short,",
+				"          WeightKG as double",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'bronze',",
+				"     fileName: 'shipping_data.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> BronzeShippingdata",
+				"source(output(",
+				"          OrderId as string,",
+				"          Region as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'query',",
+				"     store: 'synapseanalytics',",
+				"     query: 'SELECT OrderId, Region FROM silver.orders_cleaned',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     staged: true) ~> SilverOrdersCleaned",
+				"source(output(",
+				"          ShippingID as string,",
+				"          OrderID as string,",
+				"          Carrier as string,",
+				"          ShipDate as date,",
+				"          DeliveryDate as date,",
+				"          IsDelayed as boolean,",
+				"          ShippingTimeDays as integer,",
+				"          Region as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'shipping_enriched',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     staged: true) ~> SilverShippingEnriched",
+				"BronzeShippingdata derive(ShippingTimeDays = toInteger((toLong(toTimestamp(DeliveryDate)) - toLong(toTimestamp(ShipDate)) ) / (1000 * 60 * 60 * 24))) ~> ShippingDays",
+				"ShippingDays, SilverOrdersCleaned lookup(BronzeShippingdata@OrderID == SilverOrdersCleaned@OrderId,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> GetRegion",
+				"GetRegion, SilverShippingEnriched join(ShipmentID == ShippingID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> IdentifyInsertsUpdates",
+				"IdentifyInsertsUpdates split(isNull(ShippingID),",
+				"     (ShipmentID == ShippingID) && \r",
+				"(\r",
+				"   ( iif(isNull(BronzeShippingdata@Carrier), \"\", BronzeShippingdata@Carrier) != iif(isNull(SilverShippingEnriched@Carrier), \"\", SilverShippingEnriched@Carrier) ) &&\r",
+				"   ( iif(isNull(BronzeShippingdata@ShipDate), toDate(\"1900-01-01\"), BronzeShippingdata@ShipDate) != iif(isNull(SilverShippingEnriched@ShipDate), toDate(\"1900-01-01\"), SilverShippingEnriched@ShipDate) )\r",
+				"),",
+				"     disjoint: false) ~> IdentifyInserts@(Inserts, Updates)",
+				"select1 alterRow(insertIf(true())) ~> alterRowInserts",
+				"select2 alterRow(updateIf(true())) ~> alterRowUpdates",
+				"IdentifyInserts@Inserts select(mapColumn(",
+				"          ShipmentID,",
+				"          OrderID = IdentifyInserts@Inserts@OrderID,",
+				"          Carrier = IdentifyInserts@Inserts@Carrier,",
+				"          ShipDate = IdentifyInserts@Inserts@ShipDate,",
+				"          DeliveryDate = IdentifyInserts@Inserts@DeliveryDate,",
+				"          DelayReason,",
+				"          DistanceKM,",
+				"          WeightKG,",
+				"          ShippingTimeDays = IdentifyInserts@Inserts@ShippingTimeDays,",
+				"          Region = IdentifyInserts@Inserts@Region,",
+				"          IsDelayed",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"IdentifyInserts@Updates select(mapColumn(",
+				"          ShippingID = ShipmentID,",
+				"          OrderID = IdentifyInserts@Updates@OrderID,",
+				"          Carrier = IdentifyInserts@Updates@Carrier,",
+				"          ShipDate = IdentifyInserts@Updates@ShipDate,",
+				"          DeliveryDate = IdentifyInserts@Updates@DeliveryDate,",
+				"          DelayReason,",
+				"          DistanceKM,",
+				"          WeightKG,",
+				"          ShippingTimeDays = IdentifyInserts@Updates@ShippingTimeDays,",
+				"          IsDelayed,",
+				"          Region = IdentifyInserts@Updates@Region",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select2",
+				"alterRowInserts sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          ShippingID as string,",
+				"          OrderID as string,",
+				"          Carrier as string,",
+				"          ShipDate as date,",
+				"          DeliveryDate as date,",
+				"          IsDelayed as boolean,",
+				"          ShippingTimeDays as integer,",
+				"          Region as string",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'shipping_enriched',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ShippingID = ShipmentID,",
+				"          OrderID,",
+				"          Carrier,",
+				"          ShipDate,",
+				"          DeliveryDate,",
+				"          IsDelayed,",
+				"          ShippingTimeDays,",
+				"          Region",
+				"     )) ~> ShippingEnrichedInserts",
+				"alterRowUpdates sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'shipping_enriched',",
+				"     insertable: false,",
+				"     updateable: true,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     keys:['ShippingID'],",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          ShippingID,",
+				"          OrderID,",
+				"          Carrier,",
+				"          ShipDate,",
+				"          DeliveryDate,",
+				"          DelayReason,",
+				"          DistanceKM,",
+				"          WeightKG,",
+				"          ShippingTimeDays,",
+				"          IsDelayed,",
+				"          Region",
+				"     )) ~> ShippingEnrichedUpdates"
+			]
+		}
+	}
+}

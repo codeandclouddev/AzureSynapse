@@ -1,0 +1,171 @@
+{
+	"name": "df_Suppliers_etl",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "LS_ADLS",
+						"type": "LinkedServiceReference"
+					},
+					"name": "BronzeSuppliersData"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "TargetTable"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SuppliersMasterUpdates"
+				},
+				{
+					"linkedService": {
+						"referenceName": "LS_AzureSynapse",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "FilterRank"
+				},
+				{
+					"name": "Join"
+				},
+				{
+					"name": "IdentifyUpdates"
+				},
+				{
+					"name": "Updates"
+				},
+				{
+					"name": "AlterRowInserts"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          SupplierID as string,",
+				"          Name as string,",
+				"          Country as string,",
+				"          AvgLeadTimeDays as short,",
+				"          DefectRate as double,",
+				"          OnTimeDeliveryRate as double,",
+				"          RankScore as double",
+				"     ),",
+				"     useSchema: false,",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     fileSystem: 'bronze',",
+				"     fileName: 'suppliers.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> BronzeSuppliersData",
+				"source(output(",
+				"          SupplierID as string,",
+				"          SupplierName as string,",
+				"          Country as string,",
+				"          AvgLeadTimeDays as integer,",
+				"          DefectRate as decimal(4,3),",
+				"          OnTimeDeliveryRate as decimal(4,3),",
+				"          RankScore as decimal(4,2)",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'suppliers_master',",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     staged: true) ~> TargetTable",
+				"BronzeSuppliersData filter(RankScore >= 70.0) ~> FilterRank",
+				"FilterRank, TargetTable join(BronzeSuppliersData@SupplierID == TargetTable@SupplierID,",
+				"     joinType:'left',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> Join",
+				"Join split((!isNull(BronzeSuppliersData@SupplierID)) && (!isNull(TargetTable@SupplierID))  && \r",
+				"(\r",
+				"    iifNull(Name, \"\", Name) != iifNull(SupplierName, \"\", SupplierName)  && \r",
+				"    iifNull(BronzeSuppliersData@Country, \"\", BronzeSuppliersData@Country) != iifNull(TargetTable@Country, \"\", TargetTable@Country) &&\r",
+				"    iifNull(BronzeSuppliersData@AvgLeadTimeDays, 0, BronzeSuppliersData@AvgLeadTimeDays) != iifNull(TargetTable@AvgLeadTimeDays, 0, TargetTable@AvgLeadTimeDays)\r",
+				"),",
+				"     isNull(TargetTable@SupplierID),",
+				"     disjoint: false) ~> IdentifyUpdates@(Updates, Inserts, Other)",
+				"IdentifyUpdates@Updates alterRow(updateIf(true())) ~> Updates",
+				"IdentifyUpdates@Inserts alterRow(insertIf(true())) ~> AlterRowInserts",
+				"Updates sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'suppliers_master',",
+				"     insertable: false,",
+				"     updateable: true,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     keys:['SupplierID'],",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SupplierID = IdentifyUpdates@Updates@SupplierID,",
+				"          Name,",
+				"          Country = IdentifyUpdates@Updates@Country,",
+				"          AvgLeadTimeDays = IdentifyUpdates@Updates@AvgLeadTimeDays,",
+				"          DefectRate = IdentifyUpdates@Updates@DefectRate,",
+				"          OnTimeDeliveryRate = IdentifyUpdates@Updates@OnTimeDeliveryRate,",
+				"          RankScore = IdentifyUpdates@Updates@RankScore,",
+				"          SupplierName",
+				"     )) ~> SuppliersMasterUpdates",
+				"AlterRowInserts sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          SupplierID as string,",
+				"          SupplierName as string,",
+				"          Country as string,",
+				"          AvgLeadTimeDays as integer,",
+				"          DefectRate as decimal(4,3),",
+				"          OnTimeDeliveryRate as decimal(4,3),",
+				"          RankScore as decimal(4,2)",
+				"     ),",
+				"     format: 'table',",
+				"     store: 'synapseanalytics',",
+				"     schemaName: 'silver',",
+				"     tableName: 'suppliers_master',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     allowCopyCommand: true,",
+				"     staged: true,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          SupplierID = IdentifyUpdates@Inserts@SupplierID,",
+				"          SupplierName = Name,",
+				"          Country = IdentifyUpdates@Inserts@Country,",
+				"          AvgLeadTimeDays = IdentifyUpdates@Inserts@AvgLeadTimeDays,",
+				"          DefectRate = IdentifyUpdates@Inserts@DefectRate,",
+				"          OnTimeDeliveryRate = IdentifyUpdates@Inserts@OnTimeDeliveryRate,",
+				"          RankScore = IdentifyUpdates@Inserts@RankScore",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}
