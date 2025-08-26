@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "df_Orders_etl",
+						"referenceName": "df_partner_orders_unroll",
 						"type": "DataFlowReference"
 					},
 					"staging": {
