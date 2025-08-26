@@ -446,14 +446,12 @@
 						"userProperties": [],
 						"typeProperties": {
 							"dataflow": {
-								"referenceName": "df_Orders_etl",
+								"referenceName": "df_partner_orders_unroll",
 								"type": "DataFlowReference",
 								"parameters": {},
 								"datasetParameters": {
-									"OrdersRawdata": {},
-									"TargetTable": {},
-									"OrdersCleanedUpdates": {},
-									"OrdersCleanedInserts": {}
+									"BronzePartnerOrders": {},
+									"PartnerOrders": {}
 								}
 							},
 							"staging": {
@@ -477,7 +475,7 @@
 				"annotations": []
 			},
 			"dependsOn": [
-				"[concat(variables('workspaceId'), '/dataflows/df_Orders_etl')]",
+				"[concat(variables('workspaceId'), '/dataflows/df_partner_orders_unroll')]",
 				"[concat(variables('workspaceId'), '/linkedServices/LS_BlobStorage')]"
 			]
 		},
