@@ -16,7 +16,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"dataflow": {
-						"referenceName": "Dataflow1",
+						"referenceName": "df_Orders_etl",
 						"type": "DataFlowReference"
 					},
 					"staging": {
