@@ -2306,6 +2306,146 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/Create Table inventory_snapshot')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[inventory_snapshot]\n( \n\t[ProductID] [varchar](50)  NULL,\n\t[WarehouseID] [varchar](50)  NULL,\n\t[Quantity] [int]  NULL,\n\t[LastStockedDate] [date]  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Table orders_cleaned')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[orders_cleaned]\n( \n\t[OrderID] [varchar](50)  NULL,\n\t[CustomerID] [varchar](50)  NULL,\n\t[ProductID] [varchar](50)  NULL,\n\t[Quantity] [int]  NULL,\n\t[UnitPrice] [decimal](10,2)  NULL,\n\t[OrderValue] [decimal](10,2)  NULL,\n\t[OrderDate] [date]  NULL,\n\t[OrderDateKey] [int]  NULL,\n\t[Region] [varchar](50)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Table partner_orders_flat')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[partner_orders_flat]\n( \n\t[PartnerID] [varchar](50)  NULL,\n\t[OrderID] [varchar](50)  NULL,\n\t[ProductID] [varchar](50)  NULL,\n\t[Price] [decimal](10,2)  NULL,\n\t[Region] [varchar](50)  NULL,\n\t[OrderDate] [date]  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Table product_price_history_scd2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[product_price_history_scd2]\n( \n\t[ProductPriceSK] [numeric](18,0)  NULL,\n\t[ProductID] [varchar](50)  NULL,\n\t[ProductName] [varchar](50)  NULL,\n\t[Category] [varchar](50)  NULL,\n\t[Price] [decimal](10,2)  NULL,\n\t[ValidFrom] [date]  NULL,\n\t[ValidTo] [date]  NULL,\n\t[IsCurrent] [bit]  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Table returns_categorized')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[returns_categorized]\n( \n\t[ReturnID] [varchar](50)  NULL,\n\t[OrderID] [varchar](50)  NULL,\n\t[ProductID] [varchar](50)  NULL,\n\t[Reason] [varchar](50)  NULL,\n\t[ReturnDate] [date]  NULL,\n\t[ReturnCost] [decimal](10,2)  NULL,\n\t[DefectCode] [varchar](50)  NULL,\n\t[CustomerRegion] [varchar](50)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Table shipping_enriched')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[shipping_enriched]\n( \n\t[ShippingID] [varchar](50)  NULL,\n\t[OrderID] [varchar](50)  NULL,\n\t[Carrier] [varchar](50)  NULL,\n\t[ShipDate] [date]  NULL,\n\t[DeliveryDate] [date]  NULL,\n\t[IsDelayed] [bit]  NULL,\n\t[ShippingTimeDays] [int]  NULL,\n\t[Region] [varchar](50)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create Table suppliers_master')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[suppliers_master]\n( \n\t[SupplierID] [varchar](50)  NULL,\n\t[SupplierName] [varchar](100)  NULL,\n\t[Country] [varchar](50)  NULL,\n\t[AvgLeadTimeDays] [int]  NULL,\n\t[DefectRate] [decimal](4,3)  NULL,\n\t[OnTimeDeliveryRate] [decimal](4,3)  NULL,\n\t[RankScore] [decimal](4,2)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/Create bronze schema objects')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
