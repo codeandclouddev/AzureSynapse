@@ -1,0 +1,17 @@
+{
+	"name": "Create Table inventory_snapshot",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[inventory_snapshot]\n( \n\t[ProductID] [varchar](50)  NULL,\n\t[WarehouseID] [varchar](50)  NULL,\n\t[Quantity] [int]  NULL,\n\t[LastStockedDate] [date]  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

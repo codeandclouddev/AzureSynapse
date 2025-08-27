@@ -1,0 +1,17 @@
+{
+	"name": "Create Table suppliers_master",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[suppliers_master]\n( \n\t[SupplierID] [varchar](50)  NULL,\n\t[SupplierName] [varchar](100)  NULL,\n\t[Country] [varchar](50)  NULL,\n\t[AvgLeadTimeDays] [int]  NULL,\n\t[DefectRate] [decimal](4,3)  NULL,\n\t[OnTimeDeliveryRate] [decimal](4,3)  NULL,\n\t[RankScore] [decimal](4,2)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

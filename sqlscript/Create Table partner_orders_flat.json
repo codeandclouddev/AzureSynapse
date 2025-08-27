@@ -1,0 +1,17 @@
+{
+	"name": "Create Table partner_orders_flat",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[partner_orders_flat]\n( \n\t[PartnerID] [varchar](50)  NULL,\n\t[OrderID] [varchar](50)  NULL,\n\t[ProductID] [varchar](50)  NULL,\n\t[Price] [decimal](10,2)  NULL,\n\t[Region] [varchar](50)  NULL,\n\t[OrderDate] [date]  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

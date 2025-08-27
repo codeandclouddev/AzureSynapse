@@ -1,0 +1,17 @@
+{
+	"name": "Create Table shipping_enriched",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[shipping_enriched]\n( \n\t[ShippingID] [varchar](50)  NULL,\n\t[OrderID] [varchar](50)  NULL,\n\t[Carrier] [varchar](50)  NULL,\n\t[ShipDate] [date]  NULL,\n\t[DeliveryDate] [date]  NULL,\n\t[IsDelayed] [bit]  NULL,\n\t[ShippingTimeDays] [int]  NULL,\n\t[Region] [varchar](50)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

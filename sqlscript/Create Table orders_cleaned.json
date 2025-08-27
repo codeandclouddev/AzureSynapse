@@ -1,0 +1,17 @@
+{
+	"name": "Create Table orders_cleaned",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[orders_cleaned]\n( \n\t[OrderID] [varchar](50)  NULL,\n\t[CustomerID] [varchar](50)  NULL,\n\t[ProductID] [varchar](50)  NULL,\n\t[Quantity] [int]  NULL,\n\t[UnitPrice] [decimal](10,2)  NULL,\n\t[OrderValue] [decimal](10,2)  NULL,\n\t[OrderDate] [date]  NULL,\n\t[OrderDateKey] [int]  NULL,\n\t[Region] [varchar](50)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}

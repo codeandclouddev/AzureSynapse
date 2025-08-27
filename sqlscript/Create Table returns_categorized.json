@@ -1,0 +1,17 @@
+{
+	"name": "Create Table returns_categorized",
+	"properties": {
+		"content": {
+			"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [silver].[returns_categorized]\n( \n\t[ReturnID] [varchar](50)  NULL,\n\t[OrderID] [varchar](50)  NULL,\n\t[ProductID] [varchar](50)  NULL,\n\t[Reason] [varchar](50)  NULL,\n\t[ReturnDate] [date]  NULL,\n\t[ReturnCost] [decimal](10,2)  NULL,\n\t[DefectCode] [varchar](50)  NULL,\n\t[CustomerRegion] [varchar](50)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
