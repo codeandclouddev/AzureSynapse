@@ -1054,6 +1054,286 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/df_Load_Fact_etl')]",
+			"type": "Microsoft.Synapse/workspaces/dataflows",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverOrdersCleaned"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverProductMaster"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverShippingEnriched"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverReturnsCategorized"
+						},
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverInventorySnapshot"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "LS_AzureSynapse",
+								"type": "LinkedServiceReference"
+							},
+							"name": "FactOrderFulfillment"
+						}
+					],
+					"transformations": [
+						{
+							"name": "LkpProductMaster"
+						},
+						{
+							"name": "JoinShippingEnriched"
+						},
+						{
+							"name": "JoinReturnsCategorized"
+						},
+						{
+							"name": "JoinInventorySnapshot"
+						},
+						{
+							"name": "AddNewColumns"
+						},
+						{
+							"name": "Aggreagate"
+						},
+						{
+							"name": "join1"
+						},
+						{
+							"name": "assert1"
+						},
+						{
+							"name": "select1"
+						},
+						{
+							"name": "alterRow2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          OrderID as string,",
+						"          CustomerID as string,",
+						"          ProductID as string,",
+						"          Quantity as integer,",
+						"          UnitPrice as decimal(10,2),",
+						"          OrderValue as decimal(10,2),",
+						"          OrderDate as date,",
+						"          OrderDateKey as integer,",
+						"          Region as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'orders_cleaned',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> SilverOrdersCleaned",
+						"source(output(",
+						"          ProductPriceSK as decimal(18,0),",
+						"          ProductID as string,",
+						"          ProductName as string,",
+						"          Category as string,",
+						"          Price as decimal(10,2),",
+						"          ValidFrom as date,",
+						"          ValidTo as date,",
+						"          IsCurrent as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'query',",
+						"     store: 'synapseanalytics',",
+						"     query: 'SELECT  [ProductPriceSK]\\n,[ProductID]\\n,[ProductName]\\n,[Category]\\n,[Price]\\n FROM [silver].[product_price_history_scd2]\\n WHERE IsCurrent = 1',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> SilverProductMaster",
+						"source(output(",
+						"          ShippingID as string,",
+						"          OrderID as string,",
+						"          Carrier as string,",
+						"          ShipDate as date,",
+						"          DeliveryDate as date,",
+						"          IsDelayed as boolean,",
+						"          ShippingTimeDays as integer,",
+						"          Region as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'shipping_enriched',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> SilverShippingEnriched",
+						"source(output(",
+						"          ReturnID as string,",
+						"          OrderID as string,",
+						"          ProductID as string,",
+						"          Reason as string,",
+						"          ReturnDate as date,",
+						"          ReturnCost as decimal(10,2),",
+						"          DefectCode as string,",
+						"          CustomerRegion as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'returns_categorized',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> SilverReturnsCategorized",
+						"source(output(",
+						"          ProductID as string,",
+						"          WarehouseID as string,",
+						"          Quantity as integer,",
+						"          LastStockedDate as date",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'silver',",
+						"     tableName: 'inventory_snapshot',",
+						"     isolationLevel: 'READ_UNCOMMITTED',",
+						"     staged: true) ~> SilverInventorySnapshot",
+						"SilverOrdersCleaned, SilverProductMaster lookup(SilverOrdersCleaned@ProductID == SilverProductMaster@ProductID,",
+						"     multiple: false,",
+						"     pickup: 'any',",
+						"     broadcast: 'auto')~> LkpProductMaster",
+						"LkpProductMaster, SilverShippingEnriched join(SilverOrdersCleaned@OrderID == SilverShippingEnriched@OrderID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinShippingEnriched",
+						"JoinShippingEnriched, SilverReturnsCategorized join(SilverOrdersCleaned@OrderID == SilverReturnsCategorized@OrderID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinReturnsCategorized",
+						"JoinReturnsCategorized, SilverInventorySnapshot join(SilverOrdersCleaned@ProductID == SilverInventorySnapshot@ProductID,",
+						"     joinType:'left',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> JoinInventorySnapshot",
+						"JoinInventorySnapshot derive(NetQuantity = coalesce(SilverOrdersCleaned@Quantity, 0) - coalesce(SilverInventorySnapshot@Quantity, 0),",
+						"          DeliveryDelayDays = round((toLong(toTimestamp(DeliveryDate)) - toLong(toTimestamp(ShipDate)))  / 86400000, 0),",
+						"          ReturnWithinDays = iif(!isNull(ReturnDate), (toLong(toTimestamp(ReturnDate))-toLong(toTimestamp(DeliveryDate)))/86400000, toLong(0))) ~> AddNewColumns",
+						"AddNewColumns aggregate(groupBy(SilverOrdersCleaned@OrderID,",
+						"          SilverOrdersCleaned@ProductID),",
+						"     NetQuantity = sum(NetQuantity),",
+						"          DeliveryDelayDays = avg(DeliveryDelayDays)) ~> Aggreagate",
+						"AddNewColumns, Aggreagate join(SilverOrdersCleaned@OrderID == Aggreagate@OrderID",
+						"     && SilverOrdersCleaned@ProductID == Aggreagate@ProductID,",
+						"     joinType:'inner',",
+						"     matchType:'exact',",
+						"     ignoreSpaces: false,",
+						"     broadcast: 'auto')~> join1",
+						"join1 assert(expectTrue(Aggreagate@NetQuantity >= 0, false, 'assert1'),",
+						"     expectTrue(Aggreagate@DeliveryDelayDays >0, false, 'assert2')) ~> assert1",
+						"assert1 select(mapColumn(",
+						"          OrderID = SilverOrdersCleaned@OrderID,",
+						"          PartnerOrderID = SilverReturnsCategorized@OrderID,",
+						"          ProductID = SilverOrdersCleaned@ProductID,",
+						"          CustomerID,",
+						"          OrderDate,",
+						"          ShipDate,",
+						"          DeliveryDate,",
+						"          ReturnDate,",
+						"          ProductName,",
+						"          NetQuantity = Aggreagate@NetQuantity,",
+						"          ReturnCost,",
+						"          DeliveryDelayDays = Aggreagate@DeliveryDelayDays,",
+						"          WarehouseID",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> select1",
+						"select1 alterRow(upsertIf(true())) ~> alterRow2",
+						"alterRow2 sink(allowSchemaDrift: false,",
+						"     validateSchema: true,",
+						"     input(",
+						"          OrderID as string,",
+						"          PartnerOrderID as string,",
+						"          ProductID as string,",
+						"          CustomerID as string,",
+						"          OrderDate as date,",
+						"          ShipDate as date,",
+						"          DeliveryDate as date,",
+						"          ReturnDate as date,",
+						"          NetQuantity as integer,",
+						"          ShippedQuantity as integer,",
+						"          ReturnedQuantity as integer,",
+						"          OrderAmount as decimal(18,2),",
+						"          ReturnCost as decimal(18,2),",
+						"          DeliveryDelayDays as integer,",
+						"          WarehouseID as string,",
+						"          IngestedAt as timestamp",
+						"     ),",
+						"     format: 'table',",
+						"     store: 'synapseanalytics',",
+						"     schemaName: 'gold',",
+						"     tableName: 'FactOrderFulfillment',",
+						"     insertable: false,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: true,",
+						"     keys:['OrderID','ProductID'],",
+						"     allowCopyCommand: true,",
+						"     staged: true,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError',",
+						"     mapColumn(",
+						"          OrderID,",
+						"          PartnerOrderID,",
+						"          ProductID,",
+						"          CustomerID,",
+						"          OrderDate,",
+						"          ShipDate,",
+						"          DeliveryDate,",
+						"          ReturnDate,",
+						"          ProductName,",
+						"          NetQuantity,",
+						"          ReturnCost,",
+						"          DeliveryDelayDays,",
+						"          WarehouseID",
+						"     )) ~> FactOrderFulfillment"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/LS_AzureSynapse')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/df_Orders_etl')]",
 			"type": "Microsoft.Synapse/workspaces/dataflows",
 			"apiVersion": "2019-06-01-preview",
@@ -2286,26 +2566,6 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('workspaceName'), '/Create Silver Schema Objects')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "CREATE SCHEMA silver;\n\n\n-- =========================================================\n-- 🔷 SILVER LAYER: Cleansed and Transformed Tables\n-- =========================================================\n\n-- 1. Orders Cleaned\nCREATE TABLE silver.orders_cleaned (\n    OrderID VARCHAR(50),\n    CustomerID VARCHAR(50),\n    ProductID VARCHAR(50),\n    Quantity INT,\n    UnitPrice DECIMAL(10, 2),\n    OrderValue DECIMAL(10, 2),\n    OrderDate DATE,\n    OrderDateKey INT\n);\n\n\nSELECT * FROM silver.orders_cleaned",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "DedicatedSQLPool",
-						"poolName": "DedicatedSQLPool"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
 			"name": "[concat(parameters('workspaceName'), '/Create Table inventory_snapshot')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -2478,46 +2738,6 @@
 					"currentConnection": {
 						"databaseName": "master",
 						"poolName": "Built-in"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "SELECT TOP (100) [OrderID]\n,[CustomerID]\n,[ProductID]\n,[Quantity]\n,[UnitPrice]\n,[OrderValue]\n,[OrderDate]\n,[OrderDateKey]\n FROM [silver].[orders_cleaned]",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "DedicatedSQLPool",
-						"poolName": "DedicatedSQLPool"
-					},
-					"resultLimit": 5000
-				},
-				"type": "SqlQuery"
-			},
-			"dependsOn": []
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
-			"type": "Microsoft.Synapse/workspaces/sqlscripts",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"content": {
-					"query": "\nALTER TABLE [silver].[orders_cleaned]\nADD \t[Region] [varchar](50)  NULL",
-					"metadata": {
-						"language": "sql"
-					},
-					"currentConnection": {
-						"databaseName": "DedicatedSQLPool",
-						"poolName": "DedicatedSQLPool"
 					},
 					"resultLimit": 5000
 				},
