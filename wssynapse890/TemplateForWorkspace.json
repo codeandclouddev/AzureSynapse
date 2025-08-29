@@ -2634,6 +2634,26 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/Create Fact Table')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SET ANSI_NULLS ON\nGO\nSET QUOTED_IDENTIFIER ON\nGO\n\nCREATE TABLE [gold].[FactOrderFulfillment]\n( \n\t[OrderID] [nvarchar](50)  NOT NULL,\n\t[PartnerOrderID] [nvarchar](50)  NULL,\n\t[ProductID] [nvarchar](50)  NOT NULL,\n\t[CustomerID] [nvarchar](50)  NULL,\n\t[OrderDate] [date]  NOT NULL,\n\t[ShipDate] [date]  NULL,\n\t[DeliveryDate] [date]  NULL,\n\t[ReturnDate] [date]  NULL,\n\t[NetQuantity] [int]  NULL,\n\t[ShippedQuantity] [int]  NULL,\n\t[ReturnedQuantity] [int]  NULL,\n\t[OrderAmount] [decimal](18,2) NULL,\n\t[ReturnCost] [decimal](18,2)  NULL,\n\t[DeliveryDelayDays] [int]  NULL,\n\t[WarehouseID] [nvarchar](50)  NULL,\n\t[IngestedAt] [datetime2](7)  NULL\n)\nWITH\n(\n\tDISTRIBUTION = ROUND_ROBIN,\n\tCLUSTERED COLUMNSTORE INDEX\n)\nGO",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/Create Table inventory_snapshot')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -2806,6 +2826,26 @@
 					"currentConnection": {
 						"databaseName": "master",
 						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "SELECT  [OrderID]\n,[PartnerOrderID]\n,[ProductID]\n,[CustomerID]\n,[OrderDate]\n,[ShipDate]\n,[DeliveryDate]\n,[ReturnDate]\n,[NetQuantity]\n,[ShippedQuantity]\n,[ReturnedQuantity]\n,[OrderAmount]\n,[ReturnCost]\n,[DeliveryDelayDays]\n,[WarehouseID]\n,[IngestedAt]\n FROM [gold].[FactOrderFulfillment]\n --WHERE OrderId = 'O100892'",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "DedicatedSQLPool",
+						"poolName": "DedicatedSQLPool"
 					},
 					"resultLimit": 5000
 				},
