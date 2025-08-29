@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 1",
+	"properties": {
+		"content": {
+			"query": "SELECT  [OrderID]\n,[PartnerOrderID]\n,[ProductID]\n,[CustomerID]\n,[OrderDate]\n,[ShipDate]\n,[DeliveryDate]\n,[ReturnDate]\n,[NetQuantity]\n,[ShippedQuantity]\n,[ReturnedQuantity]\n,[OrderAmount]\n,[ReturnCost]\n,[DeliveryDelayDays]\n,[WarehouseID]\n,[IngestedAt]\n FROM [gold].[FactOrderFulfillment]\n --WHERE OrderId = 'O100892'",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "DedicatedSQLPool",
+				"poolName": "DedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
