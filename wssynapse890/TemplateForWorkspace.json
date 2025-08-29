@@ -1187,13 +1187,13 @@
 							"name": "join1"
 						},
 						{
-							"name": "assert1"
+							"name": "Assert"
 						},
 						{
-							"name": "select1"
+							"name": "SelectColumns"
 						},
 						{
-							"name": "alterRow2"
+							"name": "AlterRowUpsert"
 						}
 					],
 					"scriptLines": [
@@ -1304,7 +1304,8 @@
 						"     broadcast: 'auto')~> JoinInventorySnapshot",
 						"JoinInventorySnapshot derive(NetQuantity = coalesce(SilverOrdersCleaned@Quantity, 0) - coalesce(SilverInventorySnapshot@Quantity, 0),",
 						"          DeliveryDelayDays = round((toLong(toTimestamp(DeliveryDate)) - toLong(toTimestamp(ShipDate)))  / 86400000, 0),",
-						"          ReturnWithinDays = iif(!isNull(ReturnDate), (toLong(toTimestamp(ReturnDate))-toLong(toTimestamp(DeliveryDate)))/86400000, toLong(0))) ~> AddNewColumns",
+						"          ReturnWithinDays = iif(!isNull(ReturnDate), (toLong(toTimestamp(ReturnDate))-toLong(toTimestamp(DeliveryDate)))/86400000, toLong(0)),",
+						"          IngestedAt = currentTimestamp()) ~> AddNewColumns",
 						"AddNewColumns aggregate(groupBy(SilverOrdersCleaned@OrderID,",
 						"          SilverOrdersCleaned@ProductID),",
 						"     NetQuantity = sum(NetQuantity),",
@@ -1318,8 +1319,8 @@
 						"     ignoreSpaces: false,",
 						"     broadcast: 'auto')~> join1",
 						"join1 assert(expectTrue(Aggreagate@NetQuantity >= 0, false, 'assert1'),",
-						"     expectTrue(Aggreagate@DeliveryDelayDays >0, false, 'assert2')) ~> assert1",
-						"assert1 select(mapColumn(",
+						"     expectTrue(Aggreagate@DeliveryDelayDays >0, false, 'assert2')) ~> Assert",
+						"Assert select(mapColumn(",
 						"          OrderID = SilverOrdersCleaned@OrderID,",
 						"          PartnerOrderID = SilverReturnsCategorized@OrderID,",
 						"          ProductID = SilverOrdersCleaned@ProductID,",
@@ -1335,12 +1336,13 @@
 						"          WarehouseID,",
 						"          OrderAmount = OrderValue,",
 						"          ShippedQuantity,",
-						"          ReturnedQuantity",
+						"          ReturnedQuantity,",
+						"          IngestedAt",
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select1",
-						"select1 alterRow(upsertIf(true())) ~> alterRow2",
-						"alterRow2 sink(allowSchemaDrift: false,",
+						"     skipDuplicateMapOutputs: true) ~> SelectColumns",
+						"SelectColumns alterRow(upsertIf(true())) ~> AlterRowUpsert",
+						"AlterRowUpsert sink(allowSchemaDrift: false,",
 						"     validateSchema: true,",
 						"     input(",
 						"          OrderID as string,",
@@ -1389,7 +1391,8 @@
 						"          WarehouseID,",
 						"          OrderAmount,",
 						"          ReturnedQuantity,",
-						"          ShippedQuantity",
+						"          ShippedQuantity,",
+						"          IngestedAt",
 						"     )) ~> FactOrderFulfillment"
 					]
 				}
