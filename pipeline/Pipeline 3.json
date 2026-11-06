@@ -3,8 +3,8 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Transform Orders Data",
-				"type": "ExecuteDataFlow",
+				"name": "Web1",
+				"type": "WebActivity",
 				"dependsOn": [],
 				"policy": {
 					"timeout": "0.12:00:00",
@@ -15,22 +15,12 @@
 				},
 				"userProperties": [],
 				"typeProperties": {
-					"dataflow": {
-						"referenceName": "df_Orders_etl",
-						"type": "DataFlowReference"
-					},
-					"staging": {
-						"linkedService": {
-							"referenceName": "LS_BlobStorage",
-							"type": "LinkedServiceReference"
-						},
-						"folderPath": "staging"
-					},
-					"compute": {
-						"coreCount": 8,
-						"computeType": "General"
-					},
-					"traceLevel": "Fine"
+					"method": "GET",
+					"url": "www.google.com",
+					"connectVia": {
+						"referenceName": "AutoResolveIntegrationRuntime",
+						"type": "IntegrationRuntimeReference"
+					}
 				}
 			}
 		],
